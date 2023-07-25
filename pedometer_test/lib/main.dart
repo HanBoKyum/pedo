@@ -6,8 +6,6 @@ void main() {
   runApp(const MyApp());
 }
 
-late Stream<StepCount> _stepCountStream;
-late Stream<PedestrianStatus> _pedestrianStatusStream;
 var steps = 0;
 var _status = "?";
 
@@ -37,10 +35,42 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  late Stream<StepCount> _stepCountStream;
+  late Stream<PedestrianStatus> _pedestrianStatusStream;
 
-  void initPlatformState() async {
-    print("~~~~~~~~~~~~~~~~");
+  int _counter = 0;
+  String _status = '?', _steps = '?';
+
+  void onStepCount(StepCount event) {
+    print(event);
+    setState(() {
+      _steps = event.steps.toString();
+    });
+  }
+
+  void onPedestrianStatusChanged(PedestrianStatus event) {
+    print(event);
+    setState(() {
+      _status = event.status;
+    });
+  }
+
+  void onPedestrianStatusError(error) {
+    print('onPedestrianStatusError: $error');
+    setState(() {
+      _status = 'Pedestrian Status not available';
+    });
+    print(_status);
+  }
+
+  void onStepCountError(error) {
+    print('onStepCountError: $error');
+    setState(() {
+      _steps = 'Step Count not available';
+    });
+  }
+
+  void initPlatformState() {
     _pedestrianStatusStream = Pedometer.pedestrianStatusStream;
     _pedestrianStatusStream
         .listen(onPedestrianStatusChanged)
@@ -49,46 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _stepCountStream = Pedometer.stepCountStream;
     _stepCountStream.listen(onStepCount).onError(onStepCountError);
 
-    // if (!mounted) return;
-  }
-
-  void onStepCount(StepCount event) async {
-    //TODO:: 걸음수 증가 ++
-    // print("---------------");
-    // print(event);
-    // print("---------------");
-    SharedPreferences _pref = await SharedPreferences.getInstance();
-
-    if (_pref.getInt("steps") != null) {
-      steps = _pref.getInt("steps")!;
-    }
-    setState(() {
-      steps = steps + 1;
-    });
-
-    _pref.setInt("steps", steps++);
-    print(steps);
-    // setState(() {});
-  }
-
-  void onPedestrianStatusChanged(PedestrianStatus event) {
-    // setState(() {
-    _status = event.status;
-    // });
-  }
-
-  void onPedestrianStatusError(error) {
-    print('onPedestrianStatusError: $error');
-    // setState(() {
-    _status = 'Pedestrian Status not available';
-    // });
-  }
-
-  void onStepCountError(error) {
-    print('onStepCountError: $error');
-    // setState(() {
-    //   _steps = 'Step Count not available';
-    // });
+    if (!mounted) return;
   }
 
   @override
@@ -137,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
               '걸음수',
             ),
             Text(
-              '$steps',
+              '$_steps',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
           ],
